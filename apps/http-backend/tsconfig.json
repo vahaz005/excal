@@ -1,0 +1,7 @@
+{
+    "extends": "@repo/typescript-config/base.json" ,
+    "compilerOptions": {
+        "rootDir": "./src" , 
+        "outDir": "./dist"
+    }
+}// adding dependies as the code base 

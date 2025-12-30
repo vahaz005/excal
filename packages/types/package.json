@@ -1,0 +1,19 @@
+{
+  "name": "@repo/types",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "exports" : {
+    "./someType": "./index.d.ts"
+  },  
+  
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }  ,
+  "devDependencies": {
+    "@repo/typescript-config": "*"
+  }
+}
