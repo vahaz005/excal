@@ -50,13 +50,13 @@ export default function Canvas({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      return;
+    };
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    if(activated === 'delete') {
-      ctx.
-    }
+   
 
     // ---------- FULLSCREEN ----------
     const resize = () => {
@@ -69,6 +69,10 @@ export default function Canvas({
 
     // ---------- DRAW ----------
     function draw() {
+
+      if(!ctx ||  !canvas) {
+        return;
+      }
 
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);
