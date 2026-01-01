@@ -66,7 +66,7 @@ app.post("/sign-in", async (req: Request, res: Response) => {
 
      res.cookie("auth-token" , token ,  {
       httpOnly:true , 
-      secure:true , 
+      secure:false , 
       sameSite:'lax' , 
       path:"/"
     });
