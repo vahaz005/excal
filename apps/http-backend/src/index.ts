@@ -37,14 +37,18 @@ app.get("/", (req, res) => {
 ====================== */
 app.post("/sign-in", async (req: Request, res: Response) => {
   const parsed = SigninSchema.safeParse(req.body);
+  console.log(req.body)
   if (!parsed.success) {
     return res.status(403).json({ message: "invalid inputs" });
   }
 
   try {
-    const user = await dbClient.user.findFirst({
+    console.log('putting into db')
+  const user = await dbClient.user.findFirst({
       where: { email: req.body.email },
     });
+
+    console.log(user)
 
     if (!user) {
       return res.status(403).json("user does not exist");
@@ -71,13 +75,13 @@ app.post("/sign-in", async (req: Request, res: Response) => {
       sameSite:'lax' , 
       path:"/"
     });
-
+   
     return  res.json({
       "token" :  token
     });
 
   } catch (error: any) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error });
   }
 });
 
@@ -86,11 +90,14 @@ app.post("/sign-in", async (req: Request, res: Response) => {
 ====================== */
 app.post("/sign-up", async (req: Request, res: Response) => {
   const parsed = CreateUserSchema.safeParse(req.body);
+
+  console.log(req.body)
   if (!parsed.success) {
     return res.status(403).json("invalid inputs");
   }
 
   try {
+
     const existingUser = await dbClient.user.findFirst({
       where: { email: req.body.email },
     });
@@ -101,13 +108,15 @@ app.post("/sign-up", async (req: Request, res: Response) => {
 
     const hash = bcrypt.hashSync(req.body.password, 10);
 
-    const newUser = await dbClient.user.create({
+    const newUser   = await dbClient.user.create({
       data: {
         email: req.body.email,
         name: req.body.name,
         password: hash,
       },
     });
+
+    console.log("newUser" ,newUser)
 
     return res.status(201).json({
       id: newUser.id,
