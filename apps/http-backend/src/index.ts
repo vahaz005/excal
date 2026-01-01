@@ -132,7 +132,7 @@ app.post("/sign-up", async (req: Request, res: Response) => {
    CREATE ROOM
 ====================== */
 app.post("/room", middelware, async (req: Request, res: Response) => {
-  const parsed = createRoomSchema.safeParse(req.body);
+  const parsed =   createRoomSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(403).json({ message: "invalid inputs" });
   }

@@ -1,0 +1,24 @@
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530  1) {
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530  2)   "name": "my-turborepo",
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530  3)   "private": true,
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530  4)   "scripts": {
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530  5)     "build": "turbo run build",
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530  6)     "dev": "turbo run dev",
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530  7)     "lint": "turbo run lint",
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530  8)     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530  9)     "check-types": "turbo run check-types"
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 10)   },
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 11)   "devDependencies": {
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 12)     "prettier": "^3.7.4",
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 13)     "turbo": "^2.7.1",
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 14)     "typescript": "5.9.2"
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 15)   },
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 16)   "engines": {
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 17)     "node": ">=18"
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 18)   },
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 19)   "packageManager": "npm@11.6.0",
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 20)   "workspaces": [
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 21)     "apps/*",
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 22)     "packages/*"
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 23)   ]
+^05fbe9b (vahaz005 2025-12-31 02:26:09 +0530 24) }
