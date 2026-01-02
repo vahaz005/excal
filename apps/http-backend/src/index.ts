@@ -4,13 +4,13 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import cors from "cors";
 
-import { JWT_SECRET } from "@repo/backend_common/config";
+import { JWT_SECRET } from "./config"
 import { middelware } from "./middleware";
 import {
   CreateUserSchema,
   SigninSchema,
   createRoomSchema,
-} from "@repo/common/schemas";
+} from "./schema";
 import { dbClient } from "@repo/db/prismaClient";
 
 const app = express();

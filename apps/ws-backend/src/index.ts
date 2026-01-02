@@ -1,6 +1,6 @@
 import "dotenv/config"
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { JWT_SECRET } from "@repo/backend_common/config";
+import { JWT_SECRET } from "./config";
 import { WebSocketServer, WebSocket } from "ws";
 import {dbClient} from "@repo/db/prismaClient"
 
