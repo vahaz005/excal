@@ -54,7 +54,11 @@ wss.on("connection", (ws, request) => {
 
   users.push(user);
 
+
+
   console.log("✅ user connected:", user.userID);
+
+  console.log(users)
 
   // ================= MESSAGE =================
 
@@ -69,7 +73,10 @@ wss.on("connection", (ws, request) => {
 
     // ---------- JOIN ROOM ----------
     if (parsedData.type === "join_room") {
-      const roomID = parsedData.roomID;
+      console.log('joining room')
+      const roomID = parsedData.roomId;
+      console.log("roomID printing after joining" , roomID)
+
       if (roomID && !user.rooms.includes(roomID)) {
         user.rooms.push(roomID);
       }
@@ -88,6 +95,8 @@ wss.on("connection", (ws, request) => {
       const roomID = parsedData.roomID;
       const message = parsedData.message;
       const shape = parsedData.shape; // 👈 small s (NETWORK)
+
+      console.log(shape ,  message  , roomID)
 
       if (!roomID || !shape) return;
 
