@@ -16,7 +16,7 @@ import { dbClient } from "@repo/db/prismaClient";
 const app = express();
 
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: "http://13.127.230.134:3000",
   credentials: true,
 }));
 
