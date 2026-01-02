@@ -14,7 +14,7 @@ type Message = {
   message: string;
   userId: string;
   roomID: number;
-  Shape: "circle" | "rect" | "pencil";
+  Shape: "circle" | "rect" | "pencil" | "clear" | "line" | "arrow"
 };
 
 async function getroomId(slug: string) {
@@ -56,6 +56,11 @@ export default async function canvas_slug({
   const formatted_shapes_pencil = shapes
     .filter((m) => m.Shape === "pencil")
     .map((m) => JSON.parse(m.message));
+
+    const formatted_shapes_line = shapes.filter(s => s.Shape === "line").map(s => JSON.parse(s.message));
+  const formatted_shapes_arrow = shapes.filter(s => s.Shape === "arrow").map(s => JSON.parse(s.message));
+
+
 console.log(formatted_shapes_rect) 
 console.log(formatted_shapes_circle)
 
@@ -74,6 +79,8 @@ if(!token) {
       formated_shapes_rect={formatted_shapes_rect}
       formated_shapes_circle={formatted_shapes_circle}
       formated_shapes_pencil={formatted_shapes_pencil}
+      formated_shapes_arrow={formatted_shapes_arrow} 
+      formated_shapes_line={formatted_shapes_line}
       token= {token}
     />
   );

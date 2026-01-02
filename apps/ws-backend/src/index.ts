@@ -106,6 +106,11 @@ wss.on("connection", function connection(ws, request) {
       console.log('putting into db')
       console.log(parsedData.shape)
 
+      if(parsedData.shape === 'clear') {
+        await dbClient.chat.deleteMany();
+        return;
+      }
+
 
       const chat = await dbClient.chat.create({
         data: {

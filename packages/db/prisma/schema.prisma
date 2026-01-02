@@ -38,5 +38,10 @@ model Chat {
 enum Shape {
   rect
   circle
-  pencil
+  pencil 
+  clear
+  line 
+  arrow
 }
+
+
