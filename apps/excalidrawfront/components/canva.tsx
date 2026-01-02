@@ -33,8 +33,18 @@ export type Line = {
 
 export type Arrow = Line;
 
+// 🎨 Excalidraw-like muted palette
+const COLORS = [
+  "#1e1e1e",
+  "#e03131",
+  "#2f9e44",
+  "#1971c2",
+  "#f08c00",
+  "#6741d9",
+];
+
 function randomColor() {
-  return `hsl(${Math.random() * 360}, 80%, 60%)`;
+  return COLORS[Math.floor(Math.random() * COLORS.length)];
 }
 
 export default function Canvas({
@@ -71,7 +81,12 @@ export default function Canvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // CLEAR (unchanged, bas new refs add)
+    // ✨ Excal style strokes
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = 2;
+
+    // CLEAR (unchanged)
     if (activated === "clear") {
       rectanglesRef.current.length = 0;
       circlesRef.current.length = 0;
@@ -99,10 +114,9 @@ export default function Canvas({
     window.addEventListener("resize", resize);
 
     function draw() {
+      if (!canvas || !ctx) return;
 
-      if(!canvas ||  ! ctx){
-        return
-      }
+      // paper background
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       rectanglesRef.current.forEach((r) => {
@@ -172,13 +186,10 @@ export default function Canvas({
 
       draw();
 
+      ctx.setLineDash([6, 4]); // preview dash
+
       if (activated === "rect") {
-        ctx.strokeRect(
-          startX,
-          startY,
-          currentX - startX,
-          currentY - startY
-        );
+        ctx.strokeRect(startX, startY, currentX - startX, currentY - startY);
       }
 
       if (activated === "circle") {
@@ -203,6 +214,8 @@ export default function Canvas({
         ctx.lineTo(currentX, currentY);
         ctx.stroke();
       }
+
+      ctx.setLineDash([]);
     };
 
     const onMouseUp = () => {
@@ -287,5 +300,16 @@ export default function Canvas({
     };
   }, [socket, roomID, activated]);
 
-  return <canvas ref={canvasRef} style={{ background: "black" }} />;
+  return (
+    <canvas
+      ref={canvasRef}
+      className="block cursor-crosshair"
+      style={{
+        backgroundColor: "#f8f9fa",
+        backgroundImage:
+          "radial-gradient(rgba(0,0,0,0.08) 1px, transparent 1px)",
+        backgroundSize: "20px 20px",
+      }}
+    />
+  );
 }
