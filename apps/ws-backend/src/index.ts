@@ -1,22 +1,22 @@
-import "dotenv/config"
+import "dotenv/config";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { JWT_SECRET } from "./config";
 import { WebSocketServer, WebSocket } from "ws";
-import {dbClient} from "@repo/db/prismaClient"
+import { dbClient } from "@repo/db/prismaClient";
 
 const wss = new WebSocketServer({ port: 3001 });
 
 type User = {
   userID: string;
-  room: string[];
-  web: WebSocket;
+  rooms: string[];
+  socket: WebSocket;
 };
 
 const users: User[] = [];
 
 // ================= CONNECTION =================
 
-wss.on("connection", function connection(ws, request) {
+wss.on("connection", (ws, request) => {
   const url = request.url;
   if (!url) {
     ws.close();
@@ -24,10 +24,13 @@ wss.on("connection", function connection(ws, request) {
   }
 
   const query = url.split("?")[1];
-  const queryParams = new URLSearchParams(query);
-  const token = queryParams.get("token") || "";
+  const params = new URLSearchParams(query);
+  const token = params.get("token");
 
-  console.log('token' ,token)
+  if (!token) {
+    ws.close();
+    return;
+  }
 
   let decoded: JwtPayload;
 
@@ -43,17 +46,19 @@ wss.on("connection", function connection(ws, request) {
     return;
   }
 
-  console.log(decoded)
-
-  users.push({
+  const user: User = {
     userID: decoded.userID,
-    room: [],
-    web: ws,
-  });
+    rooms: [],
+    socket: ws,
+  };
+
+  users.push(user);
+
+  console.log("✅ user connected:", user.userID);
 
   // ================= MESSAGE =================
 
-  ws.on("message",  async  function message(data) {
+  ws.on("message", async (data) => {
     let parsedData: any;
 
     try {
@@ -62,73 +67,76 @@ wss.on("connection", function connection(ws, request) {
       return;
     }
 
-    const user = users.find((x) => x.web === ws);
-    if (!user) return;
-
     // ---------- JOIN ROOM ----------
     if (parsedData.type === "join_room") {
-      if (!user.room.includes(parsedData.roomId)) {
-        user.room.push(parsedData.roomId);
+      const roomID = parsedData.roomID;
+      if (roomID && !user.rooms.includes(roomID)) {
+        user.rooms.push(roomID);
       }
+      return;
     }
 
     // ---------- LEAVE ROOM ----------
     if (parsedData.type === "leave_room") {
-      user.room = user.room.filter(
-        (x) => x !== parsedData.roomId // ❗ FIXED
-      );
+      const roomID = parsedData.roomID;
+      user.rooms = user.rooms.filter((r) => r !== roomID);
+      return;
     }
 
-    // ---------- CHAT ----------
+    // ---------- CHAT / DRAW ----------
     if (parsedData.type === "chat") {
-      console.log('sending message')
       const roomID = parsedData.roomID;
-      console.log('roomID' , roomID)
       const message = parsedData.message;
-      console.log(message)
+      const shape = parsedData.shape; // 👈 small s (NETWORK)
 
-      users.forEach((x) => {
-        if (x.room.includes(roomID)) { // ❗ FIXED SYNTAX
-          x.web.send(
+      if (!roomID || !shape) return;
+
+      // 🔁 Broadcast to room users
+      users.forEach((u) => {
+        if (u.rooms.includes(roomID)) {
+          u.socket.send(
             JSON.stringify({
               type: "chat",
-              message,
               roomID,
+              message,
               from: user.userID,
-              Shape :  parsedData.shape
+              shape, // 👈 small s (CLIENT expects this)
             })
           );
         }
       });
 
-      // we need to put it  in  database in rooms message basically 
-
-      console.log('putting into db')
-      console.log(parsedData.shape)
-
-      if(parsedData.shape === 'clear') {
-        await dbClient.chat.deleteMany();
+      // 🧹 CLEAR (room scoped)
+      if (shape === "clear") {
+        await dbClient.chat.deleteMany({
+          where: {
+            roomID: Number(roomID),
+          },
+        });
         return;
       }
 
-
-      const chat = await dbClient.chat.create({
+      // 💾 STORE IN DB
+      await dbClient.chat.create({
         data: {
-            message:message , 
-            userId:decoded.userID as string ,  
-            roomID:Number(roomID) ,
-            Shape:parsedData.shape
-        }
-      })
+          message,
+          userId: user.userID,
+          roomID: Number(roomID),
+          Shape: shape, // 👈 capital S (DB column)
+        },
+      });
     }
   });
 
   // ================= CLEANUP =================
 
   ws.on("close", () => {
-    const index = users.findIndex((u) => u.web === ws);
+    const index = users.findIndex((u) => u.socket === ws);
     if (index !== -1) {
       users.splice(index, 1);
     }
+    console.log("❌ user disconnected:", user.userID);
   });
 });
+
+console.log("🚀 WebSocket server running on port 3001");

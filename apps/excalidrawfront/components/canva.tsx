@@ -33,7 +33,6 @@ export type Line = {
 
 export type Arrow = Line;
 
-// 🎨 Excalidraw-like muted palette
 const COLORS = [
   "#1e1e1e",
   "#e03131",
@@ -43,9 +42,8 @@ const COLORS = [
   "#6741d9",
 ];
 
-function randomColor() {
-  return COLORS[Math.floor(Math.random() * COLORS.length)];
-}
+const randomColor = () =>
+  COLORS[Math.floor(Math.random() * COLORS.length)];
 
 export default function Canvas({
   socket,
@@ -68,11 +66,20 @@ export default function Canvas({
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const rectanglesRef = useRef<Rect[]>([...formated_shapes_rect]);
-  const circlesRef = useRef<Circle[]>([...formated_shapes_circle]);
-  const pencilRef = useRef<PencilPath[]>([...formated_shapes_pencil]);
-  const linesRef = useRef<Line[]>([...formated_shapes_line]);
-  const arrowsRef = useRef<Arrow[]>([...formated_shapes_arrow]);
+  const rectanglesRef = useRef<Rect[]>([]);
+  const circlesRef = useRef<Circle[]>([]);
+  const pencilRef = useRef<PencilPath[]>([]);
+  const linesRef = useRef<Line[]>([]);
+  const arrowsRef = useRef<Arrow[]>([]);
+
+  // 🔹 hydrate initial data once
+  useEffect(() => {
+    rectanglesRef.current = [...formated_shapes_rect];
+    circlesRef.current = [...formated_shapes_circle];
+    pencilRef.current = [...formated_shapes_pencil];
+    linesRef.current = [...formated_shapes_line];
+    arrowsRef.current = [...formated_shapes_arrow];
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -81,77 +88,51 @@ export default function Canvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // ✨ Excal style strokes
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.lineWidth = 2;
 
-    // CLEAR (unchanged)
-    if (activated === "clear") {
-      rectanglesRef.current.length = 0;
-      circlesRef.current.length = 0;
-      pencilRef.current.length = 0;
-      linesRef.current.length = 0;
-      arrowsRef.current.length = 0;
-
-      socket.send(
-        JSON.stringify({
-          type: "chat",
-          roomID,
-          shape: "clear",
-          message: "clear the canvas",
-        })
-      );
-    }
-
-    // FULLSCREEN
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       draw();
     };
+
     resize();
     window.addEventListener("resize", resize);
 
     function draw() {
-      if (!canvas || !ctx) return;
 
-      // paper background
+      if(!canvas || !ctx) {
+        return
+      }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      rectanglesRef.current.forEach((r) => {
+      rectanglesRef.current.forEach(r => {
         ctx.strokeStyle = r.color;
         ctx.strokeRect(r.x, r.y, r.width, r.height);
       });
 
-      circlesRef.current.forEach((c) => {
+      circlesRef.current.forEach(c => {
         ctx.strokeStyle = c.color;
         ctx.beginPath();
         ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
         ctx.stroke();
       });
 
-      pencilRef.current.forEach((p) => {
+      pencilRef.current.forEach(p => {
         ctx.strokeStyle = p.color;
         ctx.beginPath();
         ctx.moveTo(p.points[0].x, p.points[0].y);
-        p.points.forEach((pt) => ctx.lineTo(pt.x, pt.y));
+        p.points.forEach(pt => ctx.lineTo(pt.x, pt.y));
         ctx.stroke();
       });
 
-      linesRef.current.forEach((l) => {
+      [...linesRef.current, ...arrowsRef.current].forEach(l => {
         ctx.strokeStyle = l.color;
         ctx.beginPath();
         ctx.moveTo(l.x1, l.y1);
         ctx.lineTo(l.x2, l.y2);
-        ctx.stroke();
-      });
-
-      arrowsRef.current.forEach((a) => {
-        ctx.strokeStyle = a.color;
-        ctx.beginPath();
-        ctx.moveTo(a.x1, a.y1);
-        ctx.lineTo(a.x2, a.y2);
         ctx.stroke();
       });
     }
@@ -185,17 +166,21 @@ export default function Canvas({
       currentY = e.clientY - rect.top;
 
       draw();
-
-      ctx.setLineDash([6, 4]); // preview dash
+      ctx.setLineDash([6, 4]);
 
       if (activated === "rect") {
         ctx.strokeRect(startX, startY, currentX - startX, currentY - startY);
       }
 
       if (activated === "circle") {
-        const radius = Math.hypot(currentX - startX, currentY - startY);
         ctx.beginPath();
-        ctx.arc(startX, startY, radius, 0, Math.PI * 2);
+        ctx.arc(
+          startX,
+          startY,
+          Math.hypot(currentX - startX, currentY - startY),
+          0,
+          Math.PI * 2
+        );
         ctx.stroke();
       }
 
@@ -204,7 +189,7 @@ export default function Canvas({
         ctx.strokeStyle = pencilColor;
         ctx.beginPath();
         ctx.moveTo(currentPencil[0].x, currentPencil[0].y);
-        currentPencil.forEach((p) => ctx.lineTo(p.x, p.y));
+        currentPencil.forEach(p => ctx.lineTo(p.x, p.y));
         ctx.stroke();
       }
 
@@ -222,83 +207,100 @@ export default function Canvas({
       if (!isDragging) return;
       isDragging = false;
 
+      const send = (shape: string, payload: any) =>
+        socket.send(
+          JSON.stringify({
+            type: "chat",
+            roomID,
+            shape,
+            message: JSON.stringify(payload),
+          })
+        );
+
       if (activated === "rect") {
-        const rect: Rect = {
+        const r: Rect = {
           x: startX,
           y: startY,
           width: currentX - startX,
           height: currentY - startY,
           color: randomColor(),
         };
-        rectanglesRef.current.push(rect);
-        socket.send(JSON.stringify({ type: "chat", roomID, shape: "rect", message: JSON.stringify(rect) }));
+        rectanglesRef.current.push(r);
+        send("rect", r);
       }
 
       if (activated === "circle") {
-        const circle: Circle = {
+        const c: Circle = {
           x: startX,
           y: startY,
           radius: Math.hypot(currentX - startX, currentY - startY),
           color: randomColor(),
         };
-        circlesRef.current.push(circle);
-        socket.send(JSON.stringify({ type: "chat", roomID, shape: "circle", message: JSON.stringify(circle) }));
+        circlesRef.current.push(c);
+        send("circle", c);
       }
 
       if (activated === "pencil" && currentPencil.length > 1) {
-        const pencil: PencilPath = { points: currentPencil, color: pencilColor };
-        pencilRef.current.push(pencil);
-        socket.send(JSON.stringify({ type: "chat", roomID, shape: "pencil", message: JSON.stringify(pencil) }));
+        const p: PencilPath = {
+          points: currentPencil,
+          color: pencilColor,
+        };
+        pencilRef.current.push(p);
+        send("pencil", p);
       }
 
-      if (activated === "line") {
-        const line: Line = { x1: startX, y1: startY, x2: currentX, y2: currentY, color: randomColor() };
-        linesRef.current.push(line);
-        socket.send(JSON.stringify({ type: "chat", roomID, shape: "line", message: JSON.stringify(line) }));
-      }
-
-      if (activated === "arrow") {
-        const arrow: Arrow = { x1: startX, y1: startY, x2: currentX, y2: currentY, color: randomColor() };
-        arrowsRef.current.push(arrow);
-        socket.send(JSON.stringify({ type: "chat", roomID, shape: "arrow", message: JSON.stringify(arrow) }));
+      if (activated === "line" || activated === "arrow") {
+        const l: Line = {
+          x1: startX,
+          y1: startY,
+          x2: currentX,
+          y2: currentY,
+          color: randomColor(),
+        };
+        (activated === "line" ? linesRef : arrowsRef).current.push(l);
+        send(activated, l);
       }
 
       draw();
     };
 
-    socket.onmessage = (event) => {
+    const onSocketMessage = (event: MessageEvent) => {
       const data = JSON.parse(event.data);
       if (data.type !== "chat") return;
 
-      const shape = data.shape === "clear" ? null : JSON.parse(data.message);
+      const shape =
+        data.shape === "clear" ? null : JSON.parse(data.message);
 
       if (data.shape === "rect") rectanglesRef.current.push(shape);
       if (data.shape === "circle") circlesRef.current.push(shape);
       if (data.shape === "pencil") pencilRef.current.push(shape);
       if (data.shape === "line") linesRef.current.push(shape);
       if (data.shape === "arrow") arrowsRef.current.push(shape);
+
       if (data.shape === "clear") {
-        rectanglesRef.current.length = 0;
-        circlesRef.current.length = 0;
-        pencilRef.current.length = 0;
-        linesRef.current.length = 0;
-        arrowsRef.current.length = 0;
+        rectanglesRef.current = [];
+        circlesRef.current = [];
+        pencilRef.current = [];
+        linesRef.current = [];
+        arrowsRef.current = [];
       }
 
       draw();
     };
 
+    socket.addEventListener("message", onSocketMessage);
     canvas.addEventListener("mousedown", onMouseDown);
     canvas.addEventListener("mousemove", onMouseMove);
     canvas.addEventListener("mouseup", onMouseUp);
 
     return () => {
       window.removeEventListener("resize", resize);
+      socket.removeEventListener("message", onSocketMessage);
       canvas.removeEventListener("mousedown", onMouseDown);
       canvas.removeEventListener("mousemove", onMouseMove);
       canvas.removeEventListener("mouseup", onMouseUp);
     };
-  }, [socket, roomID, activated]);
+  }, [activated, socket, roomID]);
 
   return (
     <canvas
