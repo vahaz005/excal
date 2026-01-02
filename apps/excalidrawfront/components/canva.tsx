@@ -88,6 +88,14 @@ export default function Canvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+     if (activated === "clear") {
+        rectanglesRef.current.length = 0;
+        circlesRef.current.length = 0;
+        pencilRef.current.length = 0;
+        linesRef.current.length = 0; 
+        arrowsRef.current.length = 0;
+      }
+
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.lineWidth = 2;
@@ -278,11 +286,11 @@ export default function Canvas({
       if (data.shape === "arrow") arrowsRef.current.push(shape);
 
       if (data.shape === "clear") {
-        rectanglesRef.current = [];
-        circlesRef.current = [];
-        pencilRef.current = [];
-        linesRef.current = [];
-        arrowsRef.current = [];
+        rectanglesRef.current.length = 0;
+        circlesRef.current.length = 0;
+        pencilRef.current.length = 0;
+        linesRef.current.length = 0; 
+        arrowsRef.current.length = 0;
       }
 
       draw();
